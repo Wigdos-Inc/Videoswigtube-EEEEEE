@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload to External Server - Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .upload-form {
+            border: 2px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload Video to External Server</h1>
+    <p>This example shows how to upload videos from another website/repository to your video server.</p>
+    
+    <div class="upload-form">
+        <h3>Upload Video</h3>
+        <input type="file" id="videoInput" accept="video/*">
+        <br>
+        <button onclick="uploadVideo()">Upload to Server</button>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        // Configure your upload server URL
+        const UPLOAD_SERVER_URL = 'https://cuddly-dollop-pjpjr7x7j9qxf9p7q.github.dev/api/upload';
+        // Or use: 'http://localhost:3000/api/upload' for local testing
+
+        async function uploadVideo() {
+            const fileInput = document.getElementById('videoInput');
+            const resultDiv = document.getElementById('result');
+            
+            if (!fileInput.files || !fileInput.files[0]) {
+                showResult('Please select a video file', 'error');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            
+            // Create FormData
+            const formData = new FormData();
+            formData.append('video', file);
+            
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result';
+                resultDiv.textContent = '⏳ Uploading...';
+                
+                // Send to external server
+                const response = await fetch(UPLOAD_SERVER_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    showResult(
+                        `✅ Upload successful!\n` +
+                        `Saved as: ${result.data.filename}\n` +
+                        `Size: ${(result.data.size / (1024 * 1024)).toFixed(2)} MB`,
+                        'success'
+                    );
+                } else {
+                    showResult(`❌ Upload failed: ${result.error}`, 'error');
+                }
+                
+            } catch (error) {
+                showResult(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result ' + type;
+            resultDiv.textContent = message;
+        }
+    </script>
+
+    <hr style="margin-top: 50px;">
+    
+    <h3>Integration Instructions</h3>
+    <ol>
+        <li>Update <code>UPLOAD_SERVER_URL</code> with your actual server URL</li>
+        <li>Copy the <code>uploadVideo()</code> function to your application</li>
+        <li>Call it whenever you need to upload a video to the server</li>
+        <li>Videos will automatically be saved to the <code>videos/</code> folder</li>
+    </ol>
+</body>
+</html>
